@@ -24,6 +24,7 @@
         "php-vfs/php-vfs": "~1.2"
     },
     "require": {
+        "php": ">=5.3.3",
         "psr/log": "~1.0"
     }
 }
