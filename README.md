@@ -13,7 +13,7 @@
 With Composer :
 
 ```bash
-composer require texthtml/php-lock
+composer require sk2001/php-lock
 ```
 
 ## Usage
