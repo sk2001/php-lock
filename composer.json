@@ -1,10 +1,17 @@
 {
-    "name": "texthtml/php-lock",
-    "description" : "ressource lock",
+    "name": "sk2001/php-lock",
+    "description": "ressource lock",
     "license": "AGPL-3.0-or-later",
     "type": "library",
+    "config": {
+        "platform": {
+            "php": "5.3.3"
+        }
+    },
     "autoload": {
-        "psr-4": { "TH\\Lock\\": "src" }
+        "psr-4": {
+            "TH\\Lock\\": "src"
+        }
     },
     "authors": [
         {

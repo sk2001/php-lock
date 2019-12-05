@@ -7,12 +7,12 @@ use Psr\Log\NullLogger;
 
 class LockSet implements Lock
 {
-    private $locks = [];
+    private $locks = array();
 
     private $logger;
 
     /**
-     * @param Lock[]               $locks  array of Lock
+     * @param Lock[]               $locks array of Lock
      * @param LoggerInterface|null $logger
      */
     public function __construct(
@@ -20,10 +20,10 @@ class LockSet implements Lock
         LoggerInterface $logger = null
     ) {
         if (empty($locks)) {
-            throw new RuntimeException("Lock set cannot be empty");
+            throw new RuntimeException('Lock set cannot be empty');
         }
         $this->locks = $locks;
-        $this->logger = $logger ?: new NullLogger;
+        $this->logger = $logger ?: new NullLogger();
     }
 
     /**
@@ -31,7 +31,7 @@ class LockSet implements Lock
      */
     public function acquire()
     {
-        $acquiredLocks = [];
+        $acquiredLocks = array();
         try {
             foreach ($this->locks as $lock) {
                 $lock->acquire();
@@ -45,9 +45,14 @@ class LockSet implements Lock
         }
     }
 
+    public function __destruct()
+    {
+        $this->release();
+    }
+
     public function release()
     {
-        $exceptions = [];
+        $exceptions = array();
         foreach ($this->locks as $lock) {
             try {
                 $lock->release();
@@ -56,12 +61,7 @@ class LockSet implements Lock
             }
         }
         if (!empty($exceptions)) {
-            throw new AggregationException($exceptions, "Some locks were not released");
+            throw new AggregationException($exceptions, 'Some locks were not released');
         }
-    }
-
-    public function __destruct()
-    {
-        $this->release();
     }
 }

@@ -23,10 +23,10 @@ class FileLock implements Lock
 
     /**
      * @param string          $lock_file         path to file
-     * @param boolean         $exclusive         true for an exclusive lock, false for shared one
-     * @param boolean         $blocking          true to wait for lock to be available,
+     * @param bool            $exclusive         true for an exclusive lock, false for shared one
+     * @param bool            $blocking          true to wait for lock to be available,
      *                                           false to throw exception instead of waiting
-     * @param boolean         $remove_on_release remove file on release if no other lock remains
+     * @param bool            $remove_on_release remove file on release if no other lock remains
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -36,12 +36,12 @@ class FileLock implements Lock
         $remove_on_release = false,
         LoggerInterface $logger = null
     ) {
-        $this->lock_file         = $lock_file;
-        $this->exclusive         = $exclusive;
-        $this->blocking          = $blocking;
+        $this->lock_file = $lock_file;
+        $this->exclusive = $exclusive;
+        $this->blocking = $blocking;
         $this->remove_on_release = $remove_on_release;
 
-        $this->logger = $logger ?: new NullLogger;
+        $this->logger = $logger ?: new NullLogger();
     }
 
     /**
@@ -50,10 +50,10 @@ class FileLock implements Lock
     public function acquire()
     {
         if ($this->exclusive === FileLock::EXCLUSIVE) {
-            $lock_type = "exclusive";
+            $lock_type = 'exclusive';
             $operation = LOCK_EX;
         } else {
-            $lock_type = "shared";
+            $lock_type = 'shared';
             $operation = LOCK_SH;
         }
 
@@ -66,28 +66,50 @@ class FileLock implements Lock
 
     /**
      * try to acquire lock on file, throw in case of faillure
-     * @param  int    $operation
-     * @param  string $lock_type lock type description
+     *
+     * @param int    $operation
+     * @param string $lock_type lock type description
+     *
      * @return void
      * @see https://php.net/flock
      */
     private function tryAcquire($operation, $lock_type)
     {
-        $log_data = [
-            "lock_file" => $this->lock_file,
-            "lock_type" => $lock_type
-        ];
+        $log_data = array(
+            'lock_file' => $this->lock_file,
+            'lock_type' => $lock_type,
+        );
 
         if (!$this->flock($operation)) {
-            $this->logger->debug("could not acquire {lock_type} lock on {lock_file}", $log_data);
+            $this->logger->debug('could not acquire {lock_type} lock on {lock_file}', $log_data);
 
             throw new RuntimeException(
                 "Could not acquire $lock_type lock on {$this->lock_file}"
             );
-
         }
 
-        $this->logger->debug("{lock_type} lock acquired on {lock_file}", $log_data);
+        $this->logger->debug('{lock_type} lock acquired on {lock_file}', $log_data);
+    }
+
+    /**
+     * @return bool
+     */
+    private function flock($operation)
+    {
+        if ($this->fh === null) {
+            $this->fh = fopen($this->lock_file, 'c');
+        }
+
+        if (!is_resource($this->fh)) {
+            throw new RuntimeException("Could not open lock file {$this->lock_file}");
+        }
+
+        return flock($this->fh, $operation);
+    }
+
+    public function __destruct()
+    {
+        $this->release();
     }
 
     public function release()
@@ -106,27 +128,6 @@ class FileLock implements Lock
         fclose($this->fh);
         $this->fh = null;
 
-        $this->logger->debug("{lock_type} lock released on {lock_file}", ["lock_file" => $this->lock_file]);
-    }
-
-    public function __destruct()
-    {
-        $this->release();
-    }
-
-    /**
-     * @return boolean
-     */
-    private function flock($operation)
-    {
-        if ($this->fh === null) {
-            $this->fh = fopen($this->lock_file, "c");
-        }
-
-        if (!is_resource($this->fh)) {
-            throw new RuntimeException("Could not open lock file {$this->lock_file}");
-        }
-
-        return flock($this->fh, $operation);
+        $this->logger->debug('{lock_type} lock released on {lock_file}', array('lock_file' => $this->lock_file));
     }
 }
